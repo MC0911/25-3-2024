@@ -26,11 +26,19 @@ class Personnel{
         return $result;
     }
 
-    public static function list_personnel(){
+    public static function list_personnel($page, $per_page){
         $db = new Db();
-        $sql = "SELECT * FROM nhanvien";
+        $start = ($page - 1) * $per_page;
+        $sql = "SELECT * FROM nhanvien LIMIT $start, $per_page";
         $result = $db->select_to_array($sql);
         return $result;
+    }
+
+    public static function count_personnel(){
+        $db = new Db();
+        $sql = "SELECT COUNT(*) AS total FROM nhanvien";
+        $result = $db->select_to_array($sql);
+        return $result[0]['total'];
     }
 }
 

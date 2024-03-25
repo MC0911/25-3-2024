@@ -7,15 +7,17 @@ class Db{
             self::$connection = new mysqli("localhost",$config["username"], $config["password"], $config["databasename"]);
         }
         
-        if (self::$connection==false) {
-            return false;
+        if (self::$connection->connect_errno) {
+            echo "Failed to connect to MySQL: " . self::$connection->connect_error;
+            exit();
         }
+        
         return self::$connection;
     }
     public function query_excute($queryString){
         $connection = $this->connect();
         $result = $connection->query($queryString);
-        $connection->close();
+        // $connection->close();
         return $result;
     }
 

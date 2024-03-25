@@ -21,10 +21,33 @@
         th {
             background-color: #f2f2f2;
         }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .pagination a {
+            color: black;
+            padding: 8px 16px;
+            text-decoration: none;
+            transition: background-color .3s;
+            border: 1px solid #ddd;
+            margin: 0 4px;
+        }
+
+        .pagination a.active {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .pagination a:hover:not(.active) {background-color: #ddd;}
     </style>
 </head>
 <body>
     <h2>Danh sách nhân viên</h2>
+    <a href="/PHP/Exam/add.php">Thêm nhân viên</a>
     <table>
         <tr>
             <th>Mã nhân viên</th>
@@ -33,33 +56,19 @@
             <th>Nơi sinh</th>
             <th>Mã phòng ban</th>
             <th>Lương</th>
-        <?php 
-            // Kiểm tra xem phiên đã được bắt đầu chưa trước khi gọi session_start()
-            if(session_status() !== PHP_SESSION_ACTIVE) {
-                session_start();
-            }
-
-            require_once("./config/db.class.php");
-            require_once("./entities/user.class.php");
-
-            // Kiểm tra xem người dùng đã đăng nhập chưa và $_SESSION['user'] không phải là boolean false
-            if (isset($_SESSION['user']) && !is_bool($_SESSION['user'])) {
-                // Kiểm tra xem người dùng có thuộc tính 'role' không
-                if (property_exists($_SESSION['user'], 'role')) {
-                    // Kiểm tra xem người dùng có quyền là "admin" hay không
-                    if ($_SESSION['user']->role === 'admin') {
-                        // Hiển thị cột "Action" cho quản trị viên
-                        echo '<th>Action</th>';
-                    }
-                }
-            }
-        ?>
+            <th>Action</th>
         </tr>
         <?php
             require_once("./config/db.class.php");
             require_once("./entities/personnel.class.php");
 
-            $employees = Personnel::list_personnel();
+            // Phân trang
+            $page = isset($_GET['page']) ? $_GET['page'] : 1;
+            $per_page = 5;
+            $total_rows = Personnel::count_personnel();
+            $total_pages = ceil($total_rows / $per_page);
+
+            $employees = Personnel::list_personnel($page, $per_page);
             foreach ($employees as $employee) {
                 echo "<tr>";
                 echo "<td>" . $employee['MaNV'] . "</td>";
@@ -74,21 +83,26 @@
                 echo "<td>" . $employee['NoiSinh'] . "</td>";
                 echo "<td>" . $employee['MaPhong'] . "</td>";
                 echo "<td>" . $employee['Luong'] . "</td>";
-                // Nếu là admin, hiển thị nút Action
-                if(isset($_SESSION['user'])) {
-                    $user = $_SESSION['user'];
-                    if($user instanceof User && $user->role === 'admin') {
-                        echo "<td>";
-                        echo "<button>Edit</button>";
-                        echo "<button>Delete</button>";
-                        echo "</td>";
-                    }
+                echo "<td>";
+                echo "<button>Edit</button>";
+                echo "<button>Delete</button>";
+                echo "</td>";
                 }
+                
                 echo "</tr>";
-            }
         ?>
     </table>
+
+    <div class="pagination">
+        <?php
+        // Hiển thị các nút phân trang
+        $current_page = isset($_GET['page']) ? $_GET['page'] : 1;
+        for ($i = 1; $i <= $total_pages; $i++) {
+            echo "<a href='index.php?page=$i'";
+            if ($i == $current_page) echo " class='active'";
+            echo ">$i</a>";
+        }
+        ?>
+    </div>
 </body>
 </html>
-
-<?php include_once("footer.php"); ?>
